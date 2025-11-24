@@ -13,12 +13,24 @@ class FirebaseService {
   ).ref();
 
   Future<void> createRoom(String roomCode, Player host) async {
+    // Ensure the creator is marked as host
+    final hostPlayer = host.copyWith(isHost: true);
+
     await _db.child('rooms/$roomCode').set({
       'state': 'lobby',
+      'hostStatus': 'online',
       'players': {
-        host.id: host.toJson(),
+        hostPlayer.id: hostPlayer.toJson(),
       },
     });
+    
+    // Setze Status auf offline, wenn die Verbindung abbricht
+    await _db.child('rooms/$roomCode/players/${hostPlayer.id}').onDisconnect().update({
+      'status': 'offline',
+    });
+
+    // Dead Man's Switch: Wenn der Host die Verbindung verliert, setze hostLeftAt
+    await _db.child('rooms/$roomCode/hostLeftAt').onDisconnect().set(ServerValue.timestamp);
   }
 
   Future<void> joinRoom(String roomCode, Player player) async {
@@ -26,7 +38,14 @@ class FirebaseService {
     final snapshot = await roomRef.get();
 
     if (snapshot.exists) {
-      await roomRef.child('players/${player.id}').set(player.toJson());
+      // Ensure the joining player is not marked as host
+      final guestPlayer = player.copyWith(isHost: false);
+      await roomRef.child('players/${guestPlayer.id}').set(guestPlayer.toJson());
+      
+      // Setze Status auf offline, wenn die Verbindung abbricht
+      await roomRef.child('players/${guestPlayer.id}').onDisconnect().update({
+        'status': 'offline',
+      });
     } else {
       throw Exception('Room not found');
     }

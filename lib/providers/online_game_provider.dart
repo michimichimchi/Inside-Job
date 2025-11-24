@@ -26,7 +26,7 @@ class OnlineGameProvider with ChangeNotifier {
   String get roomState => _roomState;
   List<Player> get players => _players;
   Player? get currentPlayer => _currentPlayer;
-  bool get isHost => _players.isNotEmpty && _players.first.id == _playerId;
+  bool get isHost => _currentPlayer?.isHost ?? false;
 
   Future<void> init() async {
     final session = await _storageService.getSession();
@@ -66,6 +66,17 @@ class OnlineGameProvider with ChangeNotifier {
         final data = Map<String, dynamic>.from(event.snapshot.value as Map);
         _roomState = data['state'] ?? 'lobby';
         
+        // Room Timeout Check
+        if (data.containsKey('hostLeftAt')) {
+          final hostLeftAt = data['hostLeftAt'] as int;
+          final now = DateTime.now().millisecondsSinceEpoch;
+          // 3 minutes = 180,000 ms
+          if (now - hostLeftAt > 180000) {
+            leaveGame(); // Or trigger a specific "Room Closed" state/message
+            return;
+          }
+        }
+        
         final playersMap = Map<String, dynamic>.from(data['players'] ?? {});
         _players = playersMap.entries.map((e) {
           return Player.fromJson(Map<String, dynamic>.from(e.value));
@@ -90,6 +101,19 @@ class OnlineGameProvider with ChangeNotifier {
   Future<void> startGame() async {
     if (_roomCode != null && isHost) {
       await _firebaseService.startGame(_roomCode!);
+    }
+  }
+
+  Future<void> nextMission() async {
+    if (_roomCode != null && _playerId != null) {
+      // Reset status to active so they can pick a new mission
+      // Note: In a real async flow, we might not even need to reset status on DB 
+      // if the UI just allows picking a new difficulty.
+      // But let's reset it to be clean.
+      await _firebaseService.updatePlayerStatus(_roomCode!, _playerId!, PlayerStatus.active, 0);
+      
+      // Also clear current mission locally/remotely if needed, 
+      // but assigning a new mission will overwrite it.
     }
   }
 

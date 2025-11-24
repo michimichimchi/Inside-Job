@@ -40,7 +40,7 @@ class _GameplayScreenState extends State<GameplayScreen> {
   Widget _buildBody(BuildContext context, OnlineGameProvider game, Player player) {
     // State 3: Result (Success or Failed)
     if (player.status != PlayerStatus.active) {
-      return _buildResultView(context, player);
+      return _buildResultView(context, game, player);
     }
 
     // State 1: No Mission -> Select Difficulty
@@ -188,7 +188,7 @@ class _GameplayScreenState extends State<GameplayScreen> {
     );
   }
 
-  Widget _buildResultView(BuildContext context, Player player) {
+  Widget _buildResultView(BuildContext context, OnlineGameProvider game, Player player) {
     final isSuccess = player.status == PlayerStatus.success;
     return Center(
       child: Padding(
@@ -213,9 +213,15 @@ class _GameplayScreenState extends State<GameplayScreen> {
               style: Theme.of(context).textTheme.headlineMedium,
             ),
             const SizedBox(height: 64),
-            const Text(
-              "Wait for everyone to finish...",
-              style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                ),
+                onPressed: () => game.nextMission(),
+                child: const Text("NEXT MISSION", style: TextStyle(fontSize: 20)),
+              ),
             ),
           ],
         ),
