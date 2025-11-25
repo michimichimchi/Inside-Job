@@ -67,13 +67,25 @@ class OnlineGameProvider with ChangeNotifier {
         _roomState = data['state'] ?? 'lobby';
         
         // Room Timeout Check
+        // Room Timeout Check
         if (data.containsKey('hostLeftAt')) {
-          final hostLeftAt = data['hostLeftAt'] as int;
-          final now = DateTime.now().millisecondsSinceEpoch;
-          // 3 minutes = 180,000 ms
-          if (now - hostLeftAt > 180000) {
-            leaveGame(); // Or trigger a specific "Room Closed" state/message
-            return;
+          // If I am the host and I just reconnected (and I see hostLeftAt), 
+          // it means I was gone. I should clear it to "reclaim" the room.
+          if (isHost) {
+             _firebaseService.clearHostDisconnectedAt(_roomCode!);
+          } else {
+            // I am a guest, check if host is gone too long
+            final hostLeftAt = data['hostLeftAt'] as int;
+            final now = DateTime.now().millisecondsSinceEpoch;
+            // 3 minutes = 180,000 ms
+            if (now - hostLeftAt > 180000) {
+              // Timeout reached: Delete the room from Firebase so it doesn't persist.
+              // We do this before leaving.
+              _firebaseService.deleteRoom(_roomCode!).whenComplete(() {
+                 leaveGame();
+              });
+              return;
+            }
           }
         }
         
@@ -94,6 +106,9 @@ class OnlineGameProvider with ChangeNotifier {
         }
 
         notifyListeners();
+      } else {
+        // Room does not exist anymore (deleted by host or timeout)
+        leaveGame();
       }
     });
   }
@@ -107,13 +122,10 @@ class OnlineGameProvider with ChangeNotifier {
   Future<void> nextMission() async {
     if (_roomCode != null && _playerId != null) {
       // Reset status to active so they can pick a new mission
-      // Note: In a real async flow, we might not even need to reset status on DB 
-      // if the UI just allows picking a new difficulty.
-      // But let's reset it to be clean.
       await _firebaseService.updatePlayerStatus(_roomCode!, _playerId!, PlayerStatus.active, 0);
       
-      // Also clear current mission locally/remotely if needed, 
-      // but assigning a new mission will overwrite it.
+      // Clear current mission to force re-selection
+      await _firebaseService.clearMission(_roomCode!, _playerId!);
     }
   }
 
@@ -143,13 +155,32 @@ class OnlineGameProvider with ChangeNotifier {
   }
 
   Future<void> leaveGame() async {
-    await _storageService.clearSession();
+    // 1. Stop listening immediately to avoid reacting to our own exit updates
     _roomSubscription?.cancel();
+    _roomSubscription = null;
+
+    final code = _roomCode;
+    final pid = _playerId;
+    final wasHost = isHost;
+
+    // 2. Clear local session
+    await _storageService.clearSession();
     _roomCode = null;
     _playerId = null;
     _players = [];
     _currentPlayer = null;
     notifyListeners();
+
+    // 3. Perform Firebase operations if we were connected
+    if (code != null && pid != null) {
+      if (wasHost) {
+        // Host leaving manually -> Trigger 3 minute timer (same as crash)
+        await _firebaseService.setHostDisconnectedAt(code, pid);
+      } else {
+        // Guest leaving manually -> Remove self
+        await _firebaseService.removePlayer(code, pid);
+      }
+    }
   }
 
   String _generateRoomCode() {

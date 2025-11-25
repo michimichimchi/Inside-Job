@@ -27,7 +27,34 @@ class _GameplayScreenState extends State<GameplayScreen> {
             actions: [
               IconButton(
                 icon: const Icon(Icons.exit_to_app),
-                onPressed: () => game.leaveGame(),
+                onPressed: () async {
+                  if (game.isHost) {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Disconnect & Leave?'),
+                        content: const Text(
+                            'If you leave, the room will remain open for 3 minutes to allow reconnection. After that, it will be closed.'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: const Text('Disconnect', style: TextStyle(color: Colors.red)),
+                          ),
+                        ],
+                      ),
+                    );
+                    
+                    if (confirm == true) {
+                      game.leaveGame();
+                    }
+                  } else {
+                    game.leaveGame();
+                  }
+                },
               ),
             ],
           ),

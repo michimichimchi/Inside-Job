@@ -4,9 +4,7 @@ import '../models/player.dart';
 import '../models/mission.dart';
 
 class FirebaseService {
-  // VORHER: final DatabaseReference _db = FirebaseDatabase.instance.ref();
-  
-  // NEU: Wir geben explizit die URL für den Server in Belgien an:
+
   final DatabaseReference _db = FirebaseDatabase.instanceFor(
     app: Firebase.app(),
     databaseURL: 'https://inside-job-f8677-default-rtdb.europe-west1.firebasedatabase.app',
@@ -24,13 +22,12 @@ class FirebaseService {
       },
     });
     
-    // Setze Status auf offline, wenn die Verbindung abbricht
-    await _db.child('rooms/$roomCode/players/${hostPlayer.id}').onDisconnect().update({
-      'status': 'offline',
+    // Dead Man's Switch: Alle Aktionen bei Verbindungsabbruch in EINEM Update zusammenfassen
+    await _db.child('rooms/$roomCode').onDisconnect().update({
+      'hostStatus': 'offline',
+      'hostLeftAt': ServerValue.timestamp,
+      'players/${hostPlayer.id}/status': 'offline',
     });
-
-    // Dead Man's Switch: Wenn der Host die Verbindung verliert, setze hostLeftAt
-    await _db.child('rooms/$roomCode/hostLeftAt').onDisconnect().set(ServerValue.timestamp);
   }
 
   Future<void> joinRoom(String roomCode, Player player) async {
@@ -68,5 +65,30 @@ class FirebaseService {
 
   Future<void> assignMission(String roomCode, String playerId, Mission mission) async {
     await _db.child('rooms/$roomCode/players/$playerId/currentMission').set(mission.toJson());
+  }
+
+  Future<void> clearMission(String roomCode, String playerId) async {
+    await _db.child('rooms/$roomCode/players/$playerId/currentMission').remove();
+  }
+
+  Future<void> removePlayer(String roomCode, String playerId) async {
+    await _db.child('rooms/$roomCode/players/$playerId').remove();
+  }
+
+  Future<void> deleteRoom(String roomCode) async {
+    await _db.child('rooms/$roomCode').remove();
+  }
+
+  Future<void> setHostDisconnectedAt(String roomCode, String hostId) async {
+    await _db.child('rooms/$roomCode').update({
+      'hostLeftAt': ServerValue.timestamp,
+      'hostStatus': 'offline',
+      'players/$hostId/status': 'offline',
+    });
+  }
+
+  Future<void> clearHostDisconnectedAt(String roomCode) async {
+    await _db.child('rooms/$roomCode/hostLeftAt').remove();
+    await _db.child('rooms/$roomCode/hostStatus').set('online');
   }
 }
