@@ -5,10 +5,7 @@ import '../models/mission.dart';
 
 class FirebaseService {
 
-  final DatabaseReference _db = FirebaseDatabase.instanceFor(
-    app: Firebase.app(),
-    databaseURL: 'https://inside-job-f8677-default-rtdb.europe-west1.firebasedatabase.app',
-  ).ref();
+  final DatabaseReference _db = FirebaseDatabase.instance.ref();
 
   Future<void> createRoom(String roomCode, Player host) async {
     // Ensure the creator is marked as host
