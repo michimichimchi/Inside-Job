@@ -1,7 +1,4 @@
-plugins {
-    // Hier definieren wir die Google Services Version für das ganze Projekt
-    id("com.google.gms.google-services") version "4.4.4" apply false
-}
+
 
 
 allprojects {
