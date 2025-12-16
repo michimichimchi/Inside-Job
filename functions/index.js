@@ -35,9 +35,10 @@ exports.cleanupAbandonedRooms = onSchedule({
         const roomData = childSnapshot.val();
 
         // Sicherheitscheck
-        if (roomData.hostStatus === "offline") {
+        if (roomData.hostStatus === "offline" || !roomData.hostStatus) {
             updates[childSnapshot.key] = null; // Löschen vormerken
-            console.log(`Lösche Raum ${childSnapshot.key} (Offline seit ${new Date(roomData.hostLeftAt)})`);
+            const dateStr = roomData.hostLeftAt ? new Date(roomData.hostLeftAt).toISOString() : 'unbekannt';
+            console.log(`Lösche Raum ${childSnapshot.key} (Offline seit ${dateStr})`);
             count++;
         }
     });
