@@ -13,18 +13,13 @@ class FirebaseService {
 
     await _db.child('rooms/$roomCode').set({
       'state': 'lobby',
-      'hostStatus': 'online',
+      'lastActivity': ServerValue.timestamp,
       'players': {
         hostPlayer.id: hostPlayer.toJson(),
       },
     });
     
-    // Dead Man's Switch: Alle Aktionen bei Verbindungsabbruch in EINEM Update zusammenfassen
-    await _db.child('rooms/$roomCode').onDisconnect().update({
-      'hostStatus': 'offline',
-      'hostLeftAt': ServerValue.timestamp,
-      'players/${hostPlayer.id}/status': 'offline',
-    });
+    // Dead Man's Switch removed in favor of lastActivity timeout
   }
 
   Future<void> joinRoom(String roomCode, Player player) async {
@@ -35,8 +30,10 @@ class FirebaseService {
       // Ensure the joining player is not marked as host
       final guestPlayer = player.copyWith(isHost: false);
       await roomRef.child('players/${guestPlayer.id}').set(guestPlayer.toJson());
+      // Update activity to keep room alive
+      await roomRef.update({'lastActivity': ServerValue.timestamp});
       
-      // Setze Status auf offline, wenn die Verbindung abbricht
+      // Setze Status auf offline, wenn die Verbindung abbricht (nur für Spieler Status, nicht Host/Raum)
       await roomRef.child('players/${guestPlayer.id}').onDisconnect().update({
         'status': 'offline',
       });
@@ -50,22 +47,31 @@ class FirebaseService {
   }
 
   Future<void> startGame(String roomCode) async {
-    await _db.child('rooms/$roomCode/state').set('playing');
+    await _db.child('rooms/$roomCode').update({
+      'state': 'playing',
+      'lastActivity': ServerValue.timestamp,
+    });
   }
 
   Future<void> updatePlayerStatus(String roomCode, String playerId, PlayerStatus status, int sips) async {
-    await _db.child('rooms/$roomCode/players/$playerId').update({
-      'status': status.toString().split('.').last,
-      'sipsToGive': sips,
+    await _db.child('rooms/$roomCode').update({
+      'players/$playerId/status': status.toString().split('.').last,
+      'players/$playerId/sipsToGive': sips,
+      'lastActivity': ServerValue.timestamp,
     });
   }
 
   Future<void> assignMission(String roomCode, String playerId, Mission mission) async {
-    await _db.child('rooms/$roomCode/players/$playerId/currentMission').set(mission.toJson());
+    await _db.child('rooms/$roomCode').update({
+      'players/$playerId/currentMission': mission.toJson(),
+      'lastActivity': ServerValue.timestamp,
+    });
   }
 
   Future<void> clearMission(String roomCode, String playerId) async {
     await _db.child('rooms/$roomCode/players/$playerId/currentMission').remove();
+    // No explicit activity update needed strictly here as it usually happens with assignMission, but good practice if needed.
+    // Keeping it simple for now to avoid too many writes if not critical.
   }
 
   Future<void> removePlayer(String roomCode, String playerId) async {
@@ -76,16 +82,5 @@ class FirebaseService {
     await _db.child('rooms/$roomCode').remove();
   }
 
-  Future<void> setHostDisconnectedAt(String roomCode, String hostId) async {
-    await _db.child('rooms/$roomCode').update({
-      'hostLeftAt': ServerValue.timestamp,
-      'hostStatus': 'offline',
-      'players/$hostId/status': 'offline',
-    });
-  }
 
-  Future<void> clearHostDisconnectedAt(String roomCode) async {
-    await _db.child('rooms/$roomCode/hostLeftAt').remove();
-    await _db.child('rooms/$roomCode/hostStatus').set('online');
-  }
 }

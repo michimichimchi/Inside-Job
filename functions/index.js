@@ -7,25 +7,26 @@ admin.initializeApp();
 // Der "Hausmeister": Läuft alle 5 Minuten
 // Wir nutzen hier 'onSchedule' statt 'functions.pubsub.schedule'
 exports.cleanupAbandonedRooms = onSchedule({
-    schedule: "every 5 minutes",
-    region: "europe-west1", // Wir lassen den Code in Europa laufen, passend zu deiner Datenbank
+    schedule: "0 * * * *",
+    region: "europe-west1",
 }, async (event) => {
 
     const db = admin.database();
     const roomsRef = db.ref('rooms');
 
-    // EINSTELLUNG: 3 Minuten Inaktivität
-    const MAX_OFFLINE_TIME = 3 * 60 * 1000;
+    // EINSTELLUNG: 4 Stunden Inaktivität
+    const MAX_INACTIVE_TIME = 4 * 60 * 60 * 1000;
 
-    const cutoffTime = Date.now() - MAX_OFFLINE_TIME;
+    const cutoffTime = Date.now() - MAX_INACTIVE_TIME;
 
-    // Suche nach alten Räumen
-    const abandonedRoomsQuery = roomsRef.orderByChild('hostLeftAt').endAt(cutoffTime);
+    // Suche nach alten Räumen anhand von lastActivity
+    const oldRoomsQuery = roomsRef.orderByChild('lastActivity').endAt(cutoffTime);
 
-    const snapshot = await abandonedRoomsQuery.once('value');
+    const snapshot = await oldRoomsQuery.once('value');
 
     if (!snapshot.exists()) {
-        return; // Nichts zu tun
+        console.log("Keine inaktiven Räume gefunden.");
+        return;
     }
 
     const updates = {};
@@ -34,18 +35,20 @@ exports.cleanupAbandonedRooms = onSchedule({
     snapshot.forEach(childSnapshot => {
         const roomData = childSnapshot.val();
 
-        // Sicherheitscheck
-        if (roomData.hostStatus === "offline" || !roomData.hostStatus) {
-            updates[childSnapshot.key] = null; // Löschen vormerken
-            const dateStr = roomData.hostLeftAt ? new Date(roomData.hostLeftAt).toISOString() : 'unbekannt';
-            console.log(`Lösche Raum ${childSnapshot.key} (Offline seit ${dateStr})`);
-            count++;
-        }
+        // Wir löschen alles, was von der Query gefunden wurde.
+        // Die Query liefert:
+        // 1. Räume mit lastActivity < cutoffTime (älter als 4h)
+        // 2. Räume OHNE lastActivity (null), das beseitigt auch alte Legacy-Räume
+        updates[childSnapshot.key] = null;
+
+        const dateStr = roomData.lastActivity ? new Date(roomData.lastActivity).toISOString() : 'nie/unbekannt';
+        console.log(`Lösche Raum ${childSnapshot.key} (Inaktiv seit ${dateStr})`);
+        count++;
     });
 
     // Löschung durchführen
     if (count > 0) {
         await roomsRef.update(updates);
-        console.log(`${count} verwaiste Räume gelöscht.`);
+        console.log(`${count} inaktive Räume gelöscht.`);
     }
 });

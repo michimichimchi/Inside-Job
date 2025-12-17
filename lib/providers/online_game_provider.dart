@@ -68,26 +68,7 @@ class OnlineGameProvider with ChangeNotifier {
         
         // Room Timeout Check
         // Room Timeout Check
-        if (data.containsKey('hostLeftAt')) {
-          // If I am the host and I just reconnected (and I see hostLeftAt), 
-          // it means I was gone. I should clear it to "reclaim" the room.
-          if (isHost) {
-             _firebaseService.clearHostDisconnectedAt(_roomCode!);
-          } else {
-            // I am a guest, check if host is gone too long
-            final hostLeftAt = data['hostLeftAt'] as int;
-            final now = DateTime.now().millisecondsSinceEpoch;
-            // 3 minutes = 180,000 ms
-            if (now - hostLeftAt > 180000) {
-              // Timeout reached: Delete the room from Firebase so it doesn't persist.
-              // We do this before leaving.
-              _firebaseService.deleteRoom(_roomCode!).whenComplete(() {
-                 leaveGame();
-              });
-              return;
-            }
-          }
-        }
+        // Room Timeout Check removed (handled by Cloud Function based on lastActivity)
         
         final playersMap = Map<String, dynamic>.from(data['players'] ?? {});
         _players = playersMap.entries.map((e) {
@@ -174,8 +155,10 @@ class OnlineGameProvider with ChangeNotifier {
     // 3. Perform Firebase operations if we were connected
     if (code != null && pid != null) {
       if (wasHost) {
-        // Host leaving manually -> Trigger 3 minute timer (same as crash)
-        await _firebaseService.setHostDisconnectedAt(code, pid);
+        // Host leaves -> Delete room immediately (or keep it if you want async persistence, 
+        // but user usually expects room to close if host manually quits via button. 
+        // Logic: if host explicitly leaves, destroy room. If host crashes/backgrounds, keep room.)
+        await _firebaseService.deleteRoom(code);
       } else {
         // Guest leaving manually -> Remove self
         await _firebaseService.removePlayer(code, pid);
