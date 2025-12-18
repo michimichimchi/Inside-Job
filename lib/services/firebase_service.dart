@@ -22,6 +22,11 @@ class FirebaseService {
     // Dead Man's Switch removed in favor of lastActivity timeout
   }
 
+  Future<bool> doesRoomExist(String roomCode) async {
+    final snapshot = await _db.child('rooms/$roomCode').get();
+    return snapshot.exists;
+  }
+
   Future<void> joinRoom(String roomCode, Player player) async {
     final roomRef = _db.child('rooms/$roomCode');
     final snapshot = await roomRef.get();

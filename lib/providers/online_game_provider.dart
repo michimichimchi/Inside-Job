@@ -48,7 +48,19 @@ class OnlineGameProvider with ChangeNotifier {
   }
 
   Future<void> createRoom(String playerName) async {
-    _roomCode = _generateRoomCode();
+    // Generate unique room code
+    String code;
+    bool exists;
+    int retries = 0;
+    
+    do {
+      code = _generateRoomCode();
+      exists = await _firebaseService.doesRoomExist(code);
+      retries++;
+      if (retries > 10) throw Exception("Failed to generate unique room code");
+    } while (exists);
+
+    _roomCode = code;
     _playerId = _uuid.v4();
     final host = Player(id: _playerId!, name: playerName);
 
