@@ -12,7 +12,7 @@ class LobbyScreen extends StatelessWidget {
       builder: (context, game, child) {
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Lobby'),
+            title: Text('Lobby (${game.roomCode})'),
             actions: [
               IconButton(
                 icon: const Icon(Icons.exit_to_app),

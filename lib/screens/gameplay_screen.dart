@@ -23,7 +23,7 @@ class _GameplayScreenState extends State<GameplayScreen> {
 
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Inside Job'),
+            title: Text('Inside Job (${game.roomCode})'),
             actions: [
               IconButton(
                 icon: const Icon(Icons.exit_to_app),
