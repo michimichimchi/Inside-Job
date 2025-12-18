@@ -61,18 +61,40 @@ class GameRouter extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<OnlineGameProvider>(
       builder: (context, game, child) {
-        // 1. Not in a room -> Start Screen
+        Widget activeScreen;
+
+        // Determine active screen
         if (game.roomCode == null) {
-          return const StartScreen();
+          activeScreen = const StartScreen();
+        } else if (game.roomState == 'lobby') {
+          activeScreen = const LobbyScreen();
+        } else {
+          activeScreen = const GameplayScreen();
         }
 
-        // 2. In a room, but game hasn't started -> Lobby
-        if (game.roomState == 'lobby') {
-          return const LobbyScreen();
-        }
-
-        // 3. Game started -> Gameplay Screen
-        return const GameplayScreen();
+        return Stack(
+          children: [
+            activeScreen,
+            // Connection Overlay
+            if (!game.isConnected)
+              Container(
+                color: Colors.black54,
+                child: const Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(color: Colors.white),
+                      SizedBox(height: 16),
+                      Text(
+                        "reconnecting...",
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        );
       },
     );
   }

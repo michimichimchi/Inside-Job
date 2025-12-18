@@ -46,6 +46,12 @@ class FirebaseService {
     return _db.child('rooms/$roomCode').onValue;
   }
 
+  Stream<bool> get connectedStream {
+    return FirebaseDatabase.instance.ref('.info/connected').onValue.map((event) {
+      return (event.snapshot.value as bool?) ?? false;
+    });
+  }
+
   Future<void> startGame(String roomCode) async {
     await _db.child('rooms/$roomCode').update({
       'state': 'playing',

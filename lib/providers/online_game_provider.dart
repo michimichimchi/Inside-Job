@@ -20,6 +20,9 @@ class OnlineGameProvider with ChangeNotifier {
   List<Player> _players = [];
   Player? _currentPlayer;
   StreamSubscription? _roomSubscription;
+  StreamSubscription? _connectionSubscription;
+
+  bool _isConnected = true; // Assume connected initially or wait for first event
 
   String? get roomCode => _roomCode;
   String? get playerId => _playerId;
@@ -27,6 +30,7 @@ class OnlineGameProvider with ChangeNotifier {
   List<Player> get players => _players;
   Player? get currentPlayer => _currentPlayer;
   bool get isHost => _currentPlayer?.isHost ?? false;
+  bool get isConnected => _isConnected;
 
   Future<void> init() async {
     final session = await _storageService.getSession();
@@ -35,6 +39,12 @@ class OnlineGameProvider with ChangeNotifier {
       _playerId = session['playerId'];
       _listenToRoom();
     }
+    
+    // Monitor connection status
+    _connectionSubscription = _firebaseService.connectedStream.listen((connected) {
+      _isConnected = connected;
+      notifyListeners();
+    });
   }
 
   Future<void> createRoom(String playerName) async {
