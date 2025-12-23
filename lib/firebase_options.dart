@@ -17,10 +17,7 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -67,4 +64,16 @@ class DefaultFirebaseOptions {
     storageBucket: 'inside-job-f8677.firebasestorage.app',
     iosBundleId: 'com.michi.testApp3',
   );
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyDIWdCHtY9ra4KxtWGuUBlN5TB5xutnQAI',
+    appId: '1:159911131292:web:fa50927e4473d2b1ad1559',
+    messagingSenderId: '159911131292',
+    projectId: 'inside-job-f8677',
+    authDomain: 'inside-job-f8677.firebaseapp.com',
+    databaseURL: 'https://inside-job-f8677-default-rtdb.europe-west1.firebasedatabase.app',
+    storageBucket: 'inside-job-f8677.firebasestorage.app',
+    measurementId: 'G-10K0X02DST',
+  );
+
 }
