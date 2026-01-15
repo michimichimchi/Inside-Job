@@ -188,6 +188,13 @@ class OnlineGameProvider with ChangeNotifier {
     }
   }
 
+  @override
+  void dispose() {
+    _roomSubscription?.cancel();
+    _connectionSubscription?.cancel();
+    super.dispose();
+  }
+
   String _generateRoomCode() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     final rnd = Random();

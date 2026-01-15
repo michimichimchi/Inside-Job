@@ -50,7 +50,7 @@ class LobbyScreen extends StatelessWidget {
                       final player = game.players[index];
                       final isMe = player.id == game.playerId;
                       return Card(
-                        color: isMe ? Colors.deepPurple.withOpacity(0.3) : null,
+                        color: isMe ? Colors.deepPurple.withValues(alpha: 0.3) : null,
                         child: ListTile(
                           leading: CircleAvatar(child: Text('${index + 1}')),
                           title: Text(
