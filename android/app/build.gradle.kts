@@ -10,7 +10,7 @@ import java.util.Properties
 import java.io.FileInputStream
 
 android {
-    namespace = "com.michi.test_app_3"
+    namespace = "com.michi.Insidejob"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -25,7 +25,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.michi.test_app_3"
+        applicationId = "com.michi.Insidejob"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

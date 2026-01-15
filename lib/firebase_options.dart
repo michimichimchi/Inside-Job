@@ -48,7 +48,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyDnCKSu78GgA56EDZ4eH0TUU4hYuWkajug',
-    appId: '1:159911131292:android:6d83f5ebc05af026ad1559',
+    appId: '1:159911131292:android:1547b841d4b73515ad1559',
     messagingSenderId: '159911131292',
     projectId: 'inside-job-f8677',
     databaseURL: 'https://inside-job-f8677-default-rtdb.europe-west1.firebasedatabase.app',
@@ -57,12 +57,12 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyBBF42n6vSJcC7eUHiYcKKKBWJWm0C6cQs',
-    appId: '1:159911131292:ios:a07d33614c48a37fad1559',
+    appId: '1:159911131292:ios:cb3119350c3d4624ad1559',
     messagingSenderId: '159911131292',
     projectId: 'inside-job-f8677',
     databaseURL: 'https://inside-job-f8677-default-rtdb.europe-west1.firebasedatabase.app',
     storageBucket: 'inside-job-f8677.firebasestorage.app',
-    iosBundleId: 'com.michi.testApp3',
+    iosBundleId: 'com.michi.Insidejob',
   );
 
   static const FirebaseOptions web = FirebaseOptions(

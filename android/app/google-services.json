@@ -8,6 +8,25 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:159911131292:android:1547b841d4b73515ad1559",
+        "android_client_info": {
+          "package_name": "com.michi.Insidejob"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDnCKSu78GgA56EDZ4eH0TUU4hYuWkajug"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:159911131292:android:6d83f5ebc05af026ad1559",
         "android_client_info": {
           "package_name": "com.michi.test_app_3"
