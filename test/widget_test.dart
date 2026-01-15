@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-// import 'package:test_app_3/main.dart';
+// import 'package:inside_job/main.dart';
 
 void main() {
   testWidgets('App starts', (WidgetTester tester) async {

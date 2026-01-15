@@ -1,11 +1,11 @@
 {
-    "name": "test_app_3",
-    "short_name": "test_app_3",
+    "name": "Inside Job",
+    "short_name": "Inside Job",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Inside Job - The online multiplayer party game.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
