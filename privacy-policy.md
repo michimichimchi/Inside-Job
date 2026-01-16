@@ -8,9 +8,9 @@ Wir freuen uns, dass Sie unsere App "Inside Job" nutzen. Der Schutz Ihrer persö
 ## 2. Verantwortlicher
 Verantwortlicher für die Datenverarbeitung im Sinne der Datenschutzgesetze ist:
 
-[Dein Name oder Firmenname]
-[Deine Adresse]
-[Deine E-Mail-Adresse]
+[Michael Zerner]
+[Zielwiesen 14 79793 Wutöschingen]
+[M-Zerner@web.de]
 
 ## 3. Welche Daten wir erfassen
 
